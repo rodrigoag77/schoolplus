@@ -37,12 +37,6 @@ public class AddressServiceImpl extends BaseDTOServiceImpl<Address, AddressDTO, 
     }
 
     @Override
-    protected Address toEntity(AddressDTO dto) {
-        // Implementação básica - pode ser estendida conforme necessário
-        throw new UnsupportedOperationException("Conversão de DTO para entidade não suportada");
-    }
-
-    @Override
     public ResponseEntity<List<AddressDTO>> findAll() {
         try {
             List<Address> addresses = addressRepository.findAll();
@@ -99,12 +93,6 @@ public class AddressServiceImpl extends BaseDTOServiceImpl<Address, AddressDTO, 
         }
     }
 
-    /**
-     * Atualiza a cidade associada ao endereço
-     * 
-     * @param existing o endereço existente
-     * @param address  os novos dados do endereço
-     */
     @SuppressWarnings("null")
     private void updateAssociatedCity(@NonNull Address existing, @NonNull Address address) {
         if (address.getCity() != null && address.getCity().getId() != null) {

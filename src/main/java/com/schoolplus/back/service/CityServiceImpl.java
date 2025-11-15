@@ -33,12 +33,6 @@ public class CityServiceImpl extends BaseDTOServiceImpl<City, CityDTO, String> i
     }
 
     @Override
-    protected City toEntity(CityDTO dto) {
-        // Implementação básica - pode ser estendida conforme necessário
-        throw new UnsupportedOperationException("Conversão de DTO para entidade não suportada");
-    }
-
-    @Override
     public ResponseEntity<List<CityDTO>> findAll() {
         try {
             List<City> cities = cityRepository.findAll();

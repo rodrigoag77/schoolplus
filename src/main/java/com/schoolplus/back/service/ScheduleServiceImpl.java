@@ -34,12 +34,6 @@ public class ScheduleServiceImpl extends BaseDTOServiceImpl<Schedule, ScheduleDT
   }
 
   @Override
-  protected Schedule toEntity(ScheduleDTO dto) {
-    // Implementação básica - pode ser estendida conforme necessário
-    throw new UnsupportedOperationException("Conversão de DTO para entidade não suportada");
-  }
-
-  @Override
   @Transactional
   public ResponseEntity<Void> deleteById(@NonNull String id) {
     try {
