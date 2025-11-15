@@ -13,8 +13,6 @@ public abstract class BaseDTOServiceImpl<T, DTO, ID> {
 
     protected abstract DTO toDTO(T entity);
 
-    protected abstract T toEntity(DTO dto);
-
     public ResponseEntity<DTO> findById(@NonNull ID id) {
         try {
             return getRepository().findById(id)
