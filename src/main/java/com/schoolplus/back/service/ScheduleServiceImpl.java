@@ -34,20 +34,6 @@ public class ScheduleServiceImpl extends BaseDTOServiceImpl<Schedule, ScheduleDT
   }
 
   @Override
-  @Transactional
-  public ResponseEntity<Void> deleteById(@NonNull String id) {
-    try {
-      if (!scheduleRepository.existsById(id)) {
-        return ResponseEntity.notFound().build();
-      }
-      scheduleRepository.deleteById(id);
-      return ResponseEntity.ok().build();
-    } catch (Exception e) {
-      throw new ServiceException("Error deleting schedule: " + e.getMessage());
-    }
-  }
-
-  @Override
   public ResponseEntity<ScheduleDTO> getById(@NonNull String id) {
     try {
       return scheduleRepository.findByIdWithDetails(id)
@@ -98,7 +84,7 @@ public class ScheduleServiceImpl extends BaseDTOServiceImpl<Schedule, ScheduleDT
   @Transactional
   public ResponseEntity<ScheduleDTO> create(@NonNull Schedule schedule) {
     try {
-      
+
       Schedule createdSchedule = scheduleRepository.save(schedule);
       Schedule result = scheduleRepository.findByIdWithDetails(createdSchedule.getId())
           .orElse(createdSchedule);

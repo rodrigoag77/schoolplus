@@ -44,9 +44,8 @@ public abstract class BaseServiceImpl<T, ID> {
 
     public ResponseEntity<Void> deleteById(@NonNull ID id) {
         try {
-            if (!getRepository().existsById(id)) {
+            if (!getRepository().existsById(id))
                 return ResponseEntity.notFound().build();
-            }
             getRepository().deleteById(id);
             return ResponseEntity.ok().build();
         } catch (Exception e) {

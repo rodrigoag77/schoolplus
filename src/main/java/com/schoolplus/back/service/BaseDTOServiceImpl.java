@@ -51,4 +51,15 @@ public abstract class BaseDTOServiceImpl<T, DTO, ID> {
             throw new ServiceException(message);
         }
     }
+
+    public ResponseEntity<Void> deleteById(@NonNull ID id) {
+        try {
+            if (!getRepository().existsById(id))
+                return ResponseEntity.notFound().build();
+            getRepository().deleteById(id);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            throw new ServiceException("Error deleting entity: " + e.getMessage());
+        }
+    }
 }

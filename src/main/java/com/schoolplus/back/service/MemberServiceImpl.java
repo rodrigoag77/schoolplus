@@ -10,6 +10,7 @@ import com.schoolplus.back.repository.UserRepository;
 
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -23,7 +24,7 @@ import lombok.NonNull;
 import java.util.List;
 
 @Service
-public class MemberServiceImpl implements MemberService {
+public class MemberServiceImpl extends BaseDTOServiceImpl<Member, MemberDTO, String> implements MemberService {
 
   @Autowired
   private UserRepository userRepository;
@@ -38,21 +39,17 @@ public class MemberServiceImpl implements MemberService {
   private PasswordEncoder passwordEncoder;
 
   @Override
-  @Transactional
-  public ResponseEntity<Void> deleteById(@NonNull String id) {
-    try {
-      if (!memberRepository.existsById(id)) {
-        return ResponseEntity.notFound().build();
-      }
-      memberRepository.deleteById(id);
-      return ResponseEntity.ok().build();
-    } catch (Exception e) {
-      throw new ServiceException("Error deleting member: " + e.getMessage());
-    }
+  protected JpaRepository<Member, String> getRepository() {
+    return memberRepository;
   }
 
   @Override
-  public ResponseEntity<MemberDTO> findById(@NonNull String id) {
+  protected MemberDTO toDTO(Member entity) {
+    return new MemberDTO(entity);
+  }
+
+  @Override
+  public ResponseEntity<MemberDTO> getById(@NonNull String id) {
     try {
       return memberRepository.findById(id)
           .map(MemberDTO::new)
@@ -64,7 +61,7 @@ public class MemberServiceImpl implements MemberService {
   }
 
   @Override
-  public ResponseEntity<List<MemberDTO>> findAll() {
+  public ResponseEntity<List<MemberDTO>> getAll() {
     try {
       List<MemberDTO> members = memberRepository.findAll()
           .stream()
@@ -85,6 +82,8 @@ public class MemberServiceImpl implements MemberService {
 
       Member existingMember = memberRepository.findById(id)
           .orElseThrow(() -> new ServiceException("Member not found"));
+
+      updateNotNullEmpty(existingMember, member);
 
       if (member.getUser() != null) {
         updateUserData(existingMember, member);
@@ -152,7 +151,7 @@ public class MemberServiceImpl implements MemberService {
 
   private User createAndPersistUser(Member member) {
     User user = new User(member.getUser());
-    updateIfNotNullOrEmpty(user, member.getUser());
+    updateNotNullEmpty(user, member.getUser());
 
     String login = extractLogin(member);
     user.setLogin(login);
@@ -164,14 +163,14 @@ public class MemberServiceImpl implements MemberService {
   private Address createAndPersistAddress(Member member) {
     Address address = new Address();
     address.setId(member.getAddress().getId());
-    updateIfNotNullOrEmpty(address, member.getAddress());
+    updateNotNullEmpty(address, member.getAddress());
 
     return addressRepository.save(address);
   }
 
   private void updateUserData(Member existingMember, Member memberUpdate) {
     User user = new User(existingMember.getUser());
-    updateIfNotNullOrEmpty(user, memberUpdate.getUser());
+    updateNotNullEmpty(user, memberUpdate.getUser());
 
     String login = extractLogin(memberUpdate);
     user.setLogin(login);
@@ -184,23 +183,28 @@ public class MemberServiceImpl implements MemberService {
   private void updateAddressData(Member existingMember, Member memberUpdate) {
     Address address = new Address(existingMember.getAddress());
     address.setId(memberUpdate.getAddress().getId());
-    updateIfNotNullOrEmpty(address, memberUpdate.getAddress());
+    updateNotNullEmpty(address, memberUpdate.getAddress());
 
     Address savedAddress = addressRepository.save(address);
     existingMember.setAddress(savedAddress);
   }
 
-  private void updateIfNotNullOrEmpty(Object target, Object source) {
+  private void updateNotNullEmpty(Object target, Object source) {
     try {
       java.lang.reflect.Field[] fields = target.getClass().getDeclaredFields();
       for (java.lang.reflect.Field field : fields) {
-        if (field.getName().equalsIgnoreCase("id")) {
+        if (field.getName().equalsIgnoreCase("id"))
           continue;
-        }
+
         field.setAccessible(true);
-        Object value = field.get(source);
-        if (value != null) {
-          field.set(target, value);
+        Object sourceValue = field.get(source);
+        Object targetValue = field.get(target);
+
+        if (sourceValue != null) {
+          if (isComplexObject(sourceValue) && targetValue != null)
+            updateNotNullEmpty(targetValue, sourceValue);
+          else
+            field.set(target, sourceValue);
         }
       }
     } catch (IllegalAccessException e) {
@@ -208,4 +212,16 @@ public class MemberServiceImpl implements MemberService {
     }
   }
 
+  private boolean isComplexObject(Object obj) {
+    Class<?> clazz = obj.getClass();
+    return !clazz.isPrimitive()
+        && !(obj instanceof String)
+        && !(obj instanceof Number)
+        && !(obj instanceof Boolean)
+        && !(obj instanceof java.sql.Timestamp)
+        && !(obj instanceof java.util.Date)
+        && !(obj instanceof java.util.List)
+        && !(obj instanceof java.util.Map)
+        && !(obj instanceof Enum);
+  }
 }

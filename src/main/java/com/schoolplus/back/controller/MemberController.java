@@ -21,12 +21,12 @@ public class MemberController {
 
     @GetMapping
     public ResponseEntity<List<MemberDTO>> getAll() {
-        return memberService.findAll();
+        return memberService.getAll();
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<MemberDTO> getById(@PathVariable("id") String id) {
-        return memberService.findById(id);
+        return memberService.getById(id);
     }
 
     @PostMapping
